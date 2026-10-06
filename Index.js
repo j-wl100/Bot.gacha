@@ -7,10 +7,18 @@ const http = require('http');
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const GIPHY_API_KEY = process.env.GIPHY_API_KEY;
 
-// Función para buscar GIF en Giphy
+// Función para buscar GIF en Giphy (incluye siempre "anime" en la búsqueda)
 async function buscarGif(query) {
     try {
-        const response = await axios.get(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=anime ${query}&limit=15&rating=pg-13`);
+        const response = await axios.get('https://api.giphy.com/v1/gifs/search', {
+            params: {
+                api_key: GIPHY_API_KEY,
+                q: `anime ${query}`,
+                limit: 15,
+                rating: 'pg-13'
+            }
+        });
+        
         const gifs = response.data.data;
         
         if (gifs && gifs.length > 0) {
@@ -106,9 +114,9 @@ const accionesRol = {
     saludar: { query: "wave hello", text: "saluda con la mano" },
     despedirse: { query: "wave goodbye", text: "se despide" },
     abrazar: { query: "hug", text: "da un cálido abrazo" },
-    agarrar_de_la_mano: { query: "hold hands", text: "toma de la mano" },
+    agarrardelamano: { query: "hold hands", text: "toma de la mano" },
     tocar: { query: "touch", text: "toca suavemente" },
-    empujar_fuera: { query: "push away", text: "empuja lejos" },
+    empujarfuera: { query: "push away", text: "empuja lejos" },
     interceptar: { query: "intercept", text: "intercepta el movimiento" },
     escanear: { query: "scan", text: "escanea el área" },
     hackear: { query: "typing hack", text: "hackea el sistema" }
