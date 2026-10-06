@@ -1,10 +1,11 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const axios = require('axios');
+const http = require('http'); // Requerido para abrir puerto en Render
 
 // Tokens que pondrás en las variables de entorno de Render
 const bot = new Telegraf(process.env.BOT_TOKEN);
-// La nueva clave de Giphy que pondrás en Render
+// La clave de Giphy en Render
 const GIPHY_API_KEY = process.env.GIPHY_API_KEY;
 
 // Función actualizada para buscar un GIF en Giphy
@@ -141,7 +142,6 @@ Object.keys(accionesRol).forEach(comando => {
 
 // Comando /roltext (Para acciones libres)
 bot.command('roltext', (ctx) => {
-    // Separa el texto que el usuario escribió después del comando
     const texto = ctx.message.text.replace('/roltext', '').trim();
     const nombre = ctx.from.first_name;
 
@@ -167,13 +167,23 @@ bot.command('rolpensar', (ctx) => {
     const texto = ctx.message.text.replace('/rolpensar', '').trim();
     const nombre = ctx.from.first_name;
 
-    if (!texto) return ctx.reply('⚠ ¿Qué estás pensando? Ejemplo: `/rolpensar esto es extraño...`', { parse_mode: 'Markdown' });
+    if (!texto) return ctx.reply('⚠️ ¿Qué estás pensando? Ejemplo: `/rolpensar esto es extraño...`', { parse_mode: 'Markdown' });
 
     ctx.reply(`💭 *[ ${nombre} ] piensa:*\n\n( _${texto}_ )`, { parse_mode: 'Markdown' });
 });
 
-// Iniciar el bot
+// Iniciar el bot de Telegram
 bot.launch().then(() => console.log('El bot está encendido y listo.'));
+
+// Servidor HTTP simple para cumplir con la detección de puertos de Render
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.write('Bot corriendo correctamente en Render');
+    res.end();
+}).listen(PORT, () => {
+    console.log(`Servidor HTTP listo en el puerto ${PORT}`);
+});
 
 // Detener el bot de forma segura (buenas prácticas)
 process.once('SIGINT', () => bot.stop('SIGINT'));
