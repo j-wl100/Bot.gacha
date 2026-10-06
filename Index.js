@@ -3,17 +3,21 @@ const { Telegraf } = require('telegraf');
 const axios = require('axios');
 const http = require('http');
 
-// Tokens que pondrás en las variables de entorno de Render
+// Tokens desde las variables de entorno
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const GIPHY_API_KEY = process.env.GIPHY_API_KEY;
 
-// Función para buscar GIF en Giphy (incluye siempre "anime" en la búsqueda)
+// Función para buscar GIF eligiendo aleatoriamente entre "anime" y "cat"
 async function buscarGif(query) {
     try {
+        // Elige al azar entre anime o cat (gato)
+        const temas = ['anime', 'cat'];
+        const temaAleatorio = temas[Math.floor(Math.random() * temas.length)];
+
         const response = await axios.get('https://api.giphy.com/v1/gifs/search', {
             params: {
                 api_key: GIPHY_API_KEY,
-                q: `anime ${query}`,
+                q: `${temaAleatorio} ${query}`,
                 limit: 15,
                 rating: 'pg-13'
             }
@@ -122,7 +126,7 @@ const accionesRol = {
     hackear: { query: "typing hack", text: "hackea el sistema" }
 };
 
-// Generador automático de comandos de acción (Sin emojis)
+// Generador automático de comandos de acción
 Object.keys(accionesRol).forEach(comando => {
     bot.command(comando, async (ctx) => {
         const nombre = ctx.from.first_name;
@@ -142,7 +146,7 @@ Object.keys(accionesRol).forEach(comando => {
 });
 
 // ---------------------------------------------------------
-// COMANDO MENU (Sin decoración)
+// MENU DE COMANDOS
 // ---------------------------------------------------------
 function enviarMenu(ctx) {
     const listaComandos = Object.keys(accionesRol).map(cmd => `/${cmd}`).join('\n');
@@ -154,9 +158,8 @@ bot.command('menu', enviarMenu);
 bot.hears(/^menu$/i, enviarMenu);
 
 // ---------------------------------------------------------
-// COMANDOS DE TEXTO LIBRE (Plantillas de Rol)
+// COMANDOS DE TEXTO LIBRE
 // ---------------------------------------------------------
-
 bot.command('roltext', (ctx) => {
     const texto = ctx.message.text.replace('/roltext', '').trim();
     const nombre = ctx.from.first_name;
@@ -186,10 +189,10 @@ bot.command('rolpensar', (ctx) => {
     ctx.reply(`*[ ${nombre} ] piensa:*\n\n( _${texto}_ )`, { parse_mode: 'Markdown' });
 });
 
-// Iniciar el bot
+// Inicialización del Bot
 bot.launch().then(() => console.log('El bot está encendido y listo.'));
 
-// Servidor HTTP simple para Render
+// Servidor HTTP para Render
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
