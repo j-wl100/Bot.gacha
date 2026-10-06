@@ -1,0 +1,14 @@
+{
+  "name": "bot-rol-gacha",
+  "version": "1.0.0",
+  "description": "Bot de Rol y Gacha para Telegram",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "telegraf": "^4.15.0"
+  }
+}
