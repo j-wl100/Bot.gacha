@@ -4,17 +4,18 @@ const axios = require('axios');
 
 // Tokens que pondrás en las variables de entorno de Render
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const TENOR_API_KEY = process.env.TENOR_API_KEY;
+// La nueva clave de Giphy que pondrás en Render
+const GIPHY_API_KEY = process.env.GIPHY_API_KEY;
 
-// Función para buscar un GIF en Tenor
+// Función actualizada para buscar un GIF en Giphy
 async function buscarGif(query) {
     try {
-        // Buscamos GIFs animados (usamos "anime" antes de la acción para que pegue con la estética de rol)
-        const response = await axios.get(`https://tenor.googleapis.com/v2/search?q=anime ${query}&key=${TENOR_API_KEY}&client_key=my_test_app&limit=15`);
-        const gifs = response.data.results;
+        const response = await axios.get(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=anime ${query}&limit=15&rating=pg-13`);
+        const gifs = response.data.data;
+        
         if (gifs && gifs.length > 0) {
-            // Elige uno aleatorio entre los 15 primeros resultados
-            const gifAleatorio = gifs[Math.floor(Math.random() * gifs.length)].media_formats.gif.url;
+            // Elige uno aleatorio entre los resultados
+            const gifAleatorio = gifs[Math.floor(Math.random() * gifs.length)].images.original.url;
             return gifAleatorio;
         }
         return null;
@@ -120,7 +121,7 @@ Object.keys(accionesRol).forEach(comando => {
         const nombre = ctx.from.first_name;
         const datos = accionesRol[comando];
         
-        // Busca el GIF
+        // Busca el GIF en Giphy
         const gifUrl = await buscarGif(datos.query);
         
         if (gifUrl) {
@@ -166,7 +167,7 @@ bot.command('rolpensar', (ctx) => {
     const texto = ctx.message.text.replace('/rolpensar', '').trim();
     const nombre = ctx.from.first_name;
 
-    if (!texto) return ctx.reply('⚠️️ ¿Qué estás pensando? Ejemplo: `/rolpensar esto es extraño...`', { parse_mode: 'Markdown' });
+    if (!texto) return ctx.reply('⚠ ¿Qué estás pensando? Ejemplo: `/rolpensar esto es extraño...`', { parse_mode: 'Markdown' });
 
     ctx.reply(`💭 *[ ${nombre} ] piensa:*\n\n( _${texto}_ )`, { parse_mode: 'Markdown' });
 });
