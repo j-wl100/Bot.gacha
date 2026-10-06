@@ -1,21 +1,19 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const axios = require('axios');
-const http = require('http'); // Requerido para abrir puerto en Render
+const http = require('http');
 
 // Tokens que pondrás en las variables de entorno de Render
 const bot = new Telegraf(process.env.BOT_TOKEN);
-// La clave de Giphy en Render
 const GIPHY_API_KEY = process.env.GIPHY_API_KEY;
 
-// Función actualizada para buscar un GIF en Giphy
+// Función para buscar GIF en Giphy
 async function buscarGif(query) {
     try {
         const response = await axios.get(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=anime ${query}&limit=15&rating=pg-13`);
         const gifs = response.data.data;
         
         if (gifs && gifs.length > 0) {
-            // Elige uno aleatorio entre los resultados
             const gifAleatorio = gifs[Math.floor(Math.random() * gifs.length)].images.original.url;
             return gifAleatorio;
         }
@@ -27,7 +25,7 @@ async function buscarGif(query) {
 }
 
 // ---------------------------------------------------------
-// DICCIONARIO DE ACCIONES (El bot crea los comandos solos)
+// DICCIONARIO DE ACCIONES
 // ---------------------------------------------------------
 const accionesRol = {
     atacar: { query: "attack", text: "ataca con fuerza" },
@@ -116,66 +114,74 @@ const accionesRol = {
     hackear: { query: "typing hack", text: "hackea el sistema" }
 };
 
-// Generador automático de los comandos de arriba
+// Generador automático de comandos de acción (Sin emojis)
 Object.keys(accionesRol).forEach(comando => {
     bot.command(comando, async (ctx) => {
         const nombre = ctx.from.first_name;
         const datos = accionesRol[comando];
         
-        // Busca el GIF en Giphy
         const gifUrl = await buscarGif(datos.query);
         
         if (gifUrl) {
             await ctx.replyWithAnimation(gifUrl, {
-                caption: `🎬 *${nombre}* ${datos.text}.`,
+                caption: `*${nombre}* ${datos.text}.`,
                 parse_mode: 'Markdown'
             });
         } else {
-            ctx.reply(`🎬 *${nombre}* ${datos.text}. (Sin imagen)`);
+            ctx.reply(`*${nombre}* ${datos.text}. (Sin imagen)`, { parse_mode: 'Markdown' });
         }
     });
 });
 
 // ---------------------------------------------------------
+// COMANDO MENU (Sin decoración)
+// ---------------------------------------------------------
+function enviarMenu(ctx) {
+    const listaComandos = Object.keys(accionesRol).map(cmd => `/${cmd}`).join('\n');
+    const textoMenu = `Comandos disponibles:\n\n/roltext\n/rolsusurrar\n/rolpensar\n/menu\n\nAcciones:\n${listaComandos}`;
+    ctx.reply(textoMenu);
+}
+
+bot.command('menu', enviarMenu);
+bot.hears(/^menu$/i, enviarMenu);
+
+// ---------------------------------------------------------
 // COMANDOS DE TEXTO LIBRE (Plantillas de Rol)
 // ---------------------------------------------------------
 
-// Comando /roltext (Para acciones libres)
 bot.command('roltext', (ctx) => {
     const texto = ctx.message.text.replace('/roltext', '').trim();
     const nombre = ctx.from.first_name;
 
     if (!texto) {
-        return ctx.reply('⚠️ Formato incorrecto. Uso: `/roltext "Texto que digo" *acción que hago*`', { parse_mode: 'Markdown' });
+        return ctx.reply('Formato incorrecto. Uso: /roltext "Texto que digo" *acción que hago*');
     }
 
     ctx.reply(`*[ ${nombre} ]*\n\n${texto}`, { parse_mode: 'Markdown' });
 });
 
-// Comando /rolsusurrar
 bot.command('rolsusurrar', (ctx) => {
     const texto = ctx.message.text.replace('/rolsusurrar', '').trim();
     const nombre = ctx.from.first_name;
 
-    if (!texto) return ctx.reply('⚠️ ¿Qué quieres susurrar? Ejemplo: `/rolsusurrar "no hagas ruido"`', { parse_mode: 'Markdown' });
+    if (!texto) return ctx.reply('¿Qué quieres susurrar? Ejemplo: /rolsusurrar "no hagas ruido"');
 
     ctx.reply(`*[ ${nombre} ] susurra:*\n\n_${texto}_`, { parse_mode: 'Markdown' });
 });
 
-// Comando /rolpensar
 bot.command('rolpensar', (ctx) => {
     const texto = ctx.message.text.replace('/rolpensar', '').trim();
     const nombre = ctx.from.first_name;
 
-    if (!texto) return ctx.reply('⚠️ ¿Qué estás pensando? Ejemplo: `/rolpensar esto es extraño...`', { parse_mode: 'Markdown' });
+    if (!texto) return ctx.reply('¿Qué estás pensando? Ejemplo: /rolpensar esto es extraño...');
 
-    ctx.reply(`💭 *[ ${nombre} ] piensa:*\n\n( _${texto}_ )`, { parse_mode: 'Markdown' });
+    ctx.reply(`*[ ${nombre} ] piensa:*\n\n( _${texto}_ )`, { parse_mode: 'Markdown' });
 });
 
-// Iniciar el bot de Telegram
+// Iniciar el bot
 bot.launch().then(() => console.log('El bot está encendido y listo.'));
 
-// Servidor HTTP simple para cumplir con la detección de puertos de Render
+// Servidor HTTP simple para Render
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -185,6 +191,5 @@ http.createServer((req, res) => {
     console.log(`Servidor HTTP listo en el puerto ${PORT}`);
 });
 
-// Detener el bot de forma segura (buenas prácticas)
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
